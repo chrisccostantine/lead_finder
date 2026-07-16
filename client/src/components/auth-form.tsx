@@ -33,7 +33,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'setup' }) {
   });
 
   const mutation = useMutation({
-    mutationFn: async (values: LoginInput | SetupInput) => {
+    mutationFn: async (values: AuthInput) => {
       const endpoint = isSetup ? '/auth/register' : '/auth/login';
       const { data } = await api.post<AuthResponse>(endpoint, values);
       return data;
