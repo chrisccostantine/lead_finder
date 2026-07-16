@@ -8,7 +8,7 @@ export class LeadController {
   }
 
   async get(request: Request, response: Response) {
-    response.json({ lead: await leadService.get(request.params.id!) });
+    response.json({ lead: await leadService.get(request.params.id as string) });
   }
 
   async create(request: Request, response: Response) {
@@ -16,11 +16,11 @@ export class LeadController {
   }
 
   async update(request: Request, response: Response) {
-    response.json({ lead: await leadService.update(request.params.id!, request.body, request.auth!.userId) });
+    response.json({ lead: await leadService.update(request.params.id as string, request.body, request.auth!.userId) });
   }
 
   async archive(request: Request, response: Response) {
-    response.json({ lead: await leadService.archive(request.params.id!) });
+    response.json({ lead: await leadService.archive(request.params.id as string) });
   }
 
   async duplicates(request: Request, response: Response) {
