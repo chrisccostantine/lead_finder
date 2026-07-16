@@ -9,6 +9,9 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.string().default('8h'),
   CLIENT_URL: z.string().url(),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
+  GOOGLE_PLACES_API_KEY: z.preprocess((value) => value || undefined, z.string().min(1).optional()),
+  ENABLE_GOOGLE_PLACES: z.enum(['true', 'false']).default('false').transform((value) => value === 'true'),
+  ENABLE_MOCK_PROVIDER: z.enum(['true', 'false']).default('true').transform((value) => value === 'true'),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -18,4 +21,3 @@ if (!parsed.success) {
 }
 
 export const env = parsed.data;
-

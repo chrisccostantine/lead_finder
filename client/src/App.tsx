@@ -1,4 +1,4 @@
-import { BarChart3, FileSearch, FileText, MessageSquareText, Search } from 'lucide-react';
+import { BarChart3, FileSearch, FileText, MessageSquareText } from 'lucide-react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { ProtectedRoute } from './auth/protected-route';
 import { AppShell } from './components/app-shell';
@@ -10,6 +10,7 @@ import { LeadsPage } from './pages/leads-page';
 import { LeadEditorPage } from './pages/lead-editor-page';
 import { LeadDetailPage } from './pages/lead-detail-page';
 import { LeadImportPage } from './pages/lead-import-page';
+import { LeadFinderPage } from './pages/lead-finder-page';
 
 export default function App() {
   return <Routes>
@@ -18,7 +19,7 @@ export default function App() {
     <Route element={<ProtectedRoute />}>
       <Route element={<AppShell />}>
         <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/lead-finder" element={<PlaceholderPage title="Lead Finder" description="Approved provider search and reviewed lead imports will be implemented in Phase 3." icon={Search} />} />
+        <Route path="/lead-finder" element={<LeadFinderPage />} />
         <Route path="/leads" element={<LeadsPage />} />
         <Route path="/leads/new" element={<LeadEditorPage mode="create" />} />
         <Route path="/leads/import" element={<LeadImportPage />} />

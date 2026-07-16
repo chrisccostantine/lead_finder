@@ -1,0 +1,17 @@
+import { Router } from 'express';
+import { requireAuth } from '../auth/auth.middleware.js';
+import { validateBody, validateParams } from '../middleware/validate.js';
+import { asyncHandler } from '../utils/async-handler.js';
+import { leadFinderController as c } from './lead-finder.controller.js';
+import { idSchema, importResultsSchema, searchInputSchema, templateSchema } from './lead-finder.schemas.js';
+export const leadFinderRouter = Router();
+leadFinderRouter.use(requireAuth);
+leadFinderRouter.get('/providers', c.providers.bind(c));
+leadFinderRouter.get('/history', asyncHandler(c.history.bind(c)));
+leadFinderRouter.get('/usage', asyncHandler(c.usage.bind(c)));
+leadFinderRouter.get('/templates', asyncHandler(c.templates.bind(c)));
+leadFinderRouter.post('/templates', validateBody(templateSchema), asyncHandler(c.saveTemplate.bind(c)));
+leadFinderRouter.delete('/templates/:id', validateParams(idSchema), asyncHandler(c.deleteTemplate.bind(c)));
+leadFinderRouter.post('/search', validateBody(searchInputSchema), asyncHandler(c.search.bind(c)));
+leadFinderRouter.get('/jobs/:id', validateParams(idSchema), asyncHandler(c.job.bind(c)));
+leadFinderRouter.post('/jobs/:id/import', validateParams(idSchema), validateBody(importResultsSchema), asyncHandler(c.importResults.bind(c)));

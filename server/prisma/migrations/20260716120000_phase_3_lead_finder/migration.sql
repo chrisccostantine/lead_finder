@@ -1,0 +1,11 @@
+CREATE TYPE "SearchProvider" AS ENUM ('MOCK', 'GOOGLE_PLACES', 'MANUAL_CSV');
+CREATE TYPE "SearchJobStatus" AS ENUM ('QUEUED', 'RUNNING', 'COMPLETED', 'PARTIALLY_COMPLETED', 'FAILED');
+CREATE TABLE "search_jobs" ("id" UUID NOT NULL,"user_id" UUID NOT NULL,"provider" "SearchProvider" NOT NULL,"criteria" JSONB NOT NULL,"results" JSONB NOT NULL DEFAULT '[]',"status" "SearchJobStatus" NOT NULL DEFAULT 'QUEUED',"total_results" INTEGER NOT NULL DEFAULT 0,"imported_results" INTEGER NOT NULL DEFAULT 0,"duplicate_results" INTEGER NOT NULL DEFAULT 0,"error_details" TEXT,"started_at" TIMESTAMP(3),"completed_at" TIMESTAMP(3),"created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,"updated_at" TIMESTAMP(3) NOT NULL,CONSTRAINT "search_jobs_pkey" PRIMARY KEY ("id"));
+CREATE TABLE "api_usage_logs" ("id" UUID NOT NULL,"user_id" UUID NOT NULL,"provider" "SearchProvider" NOT NULL,"endpoint" VARCHAR(160) NOT NULL,"request_count" INTEGER NOT NULL DEFAULT 1,"result_count" INTEGER NOT NULL DEFAULT 0,"success" BOOLEAN NOT NULL DEFAULT true,"created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,CONSTRAINT "api_usage_logs_pkey" PRIMARY KEY ("id"));
+CREATE TABLE "saved_search_templates" ("id" UUID NOT NULL,"user_id" UUID NOT NULL,"name" VARCHAR(100) NOT NULL,"provider" "SearchProvider" NOT NULL,"criteria" JSONB NOT NULL,"created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,"updated_at" TIMESTAMP(3) NOT NULL,CONSTRAINT "saved_search_templates_pkey" PRIMARY KEY ("id"));
+CREATE INDEX "search_jobs_user_id_created_at_idx" ON "search_jobs"("user_id","created_at");
+CREATE INDEX "api_usage_logs_provider_created_at_idx" ON "api_usage_logs"("provider","created_at");
+CREATE UNIQUE INDEX "saved_search_templates_user_id_name_key" ON "saved_search_templates"("user_id","name");
+ALTER TABLE "search_jobs" ADD CONSTRAINT "search_jobs_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "api_usage_logs" ADD CONSTRAINT "api_usage_logs_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "saved_search_templates" ADD CONSTRAINT "saved_search_templates_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
