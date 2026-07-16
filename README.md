@@ -1,8 +1,8 @@
 # Scalora Growth Engine
 
-Internal, dark-first acquisition workspace for Scalora. This repository currently contains **Phase 1 only**: the application foundation, initial-admin authentication, and responsive application shell. Lead management, audits, outreach, proposals, and analytics remain intentionally unimplemented.
+Internal, dark-first acquisition workspace for Scalora. This repository currently contains **Phases 1 and 2**: the authenticated application foundation and complete lead-management module. Lead discovery, audits, outreach, proposals, and analytics remain intentionally unimplemented.
 
-## Included in Phase 1
+## Included
 
 - React, Vite, TypeScript, Tailwind CSS, React Router, TanStack Query, React Hook Form, Zod, and Lucide client
 - Express and TypeScript API with Prisma/PostgreSQL
@@ -12,6 +12,13 @@ Internal, dark-first acquisition workspace for Scalora. This repository currentl
 - Centralized API errors and Zod request validation
 - Responsive sidebar/top navigation, global API client, and toast notifications
 - Docker Compose PostgreSQL service and deployable Prisma migration
+- Lead CRUD with server-side pagination, search, filtering, and sorting
+- Table and card lead views with responsive loading, empty, and error states
+- Lead contacts, notes, status history, priority controls, and soft archival
+- Duplicate detection across normalized website domains, email addresses, phone numbers, and business names
+- Two-step CSV import with dry-run review, invalid-row reporting, within-file duplicate detection, and a 500-row limit
+- Dedicated lead creation, editing, details, and CSV import screens
+- Unit tests for lead validation, normalization, duplicate matching, and quoted CSV parsing
 
 ## Repository structure
 
@@ -80,6 +87,14 @@ Internal, dark-first acquisition workspace for Scalora. This repository currentl
 | POST | `/api/auth/register` | Public once | Create the first `ADMIN` |
 | POST | `/api/auth/login` | Public | Authenticate an admin |
 | GET | `/api/auth/me` | Bearer token | Return the current user |
+| GET | `/api/leads` | Bearer token | Paginated lead list with search, filters, and sorting |
+| POST | `/api/leads` | Bearer token | Create a lead and initial status history |
+| POST | `/api/leads/check-duplicates` | Bearer token | Preview potential duplicate matches |
+| POST | `/api/leads/import` | Bearer token | Dry-run or execute a reviewed CSV import |
+| GET | `/api/leads/:id` | Bearer token | Lead details, contacts, and status history |
+| PATCH | `/api/leads/:id` | Bearer token | Update a lead and record status changes |
+| DELETE | `/api/leads/:id` | Bearer token | Soft-archive a lead |
+| POST | `/api/leads/:id/archive` | Bearer token | Soft-archive a lead |
 
 Example login body:
 
@@ -95,7 +110,19 @@ API errors use a consistent shape:
 
 ## Database model
 
-Phase 1 creates one `User` model with UUID `id`, unique normalized `email`, `name`, `passwordHash`, extensible `Role` enum (currently `ADMIN`), and timestamps. The initial registration transaction uses a PostgreSQL advisory lock to ensure two concurrent setup requests cannot create multiple first admins.
+`User` has a UUID identifier, unique normalized email, name, password hash, extensible role enum, and timestamps. The initial registration transaction uses a PostgreSQL advisory lock to ensure two concurrent setup requests cannot create multiple first admins.
+
+`Lead` contains the requested business, location, website, social, source, status, priority, and notes fields. It also stores normalized internal matching keys and `archivedAt` for soft deletion. `LeadContact` stores manually entered business contacts. `LeadStatusHistory` records each initial and subsequent status with the responsible user. Phase 2 adds indexed filters and lookup keys without introducing later-phase audit or outreach relationships.
+
+## Lead list filters
+
+`GET /api/leads` supports `page`, `pageSize`, `search`, `status`, `priority`, `industry`, `country`, `city`, `source`, `hasWebsite`, `hasEmail`, `hasSocialMedia`, `createdFrom`, `createdTo`, `archived`, `sortBy`, and `sortOrder`. Page size is capped at 100.
+
+## CSV import
+
+The client reads the selected CSV locally and sends its text to the authenticated API. Imports first run in dry-run mode so the user can review invalid and duplicate rows. A confirmed import skips those rows and inserts the remaining leads in a transaction.
+
+`businessName` is required. Supported optional headers include `industry`, `description`, `websiteUrl` (or `website`), `email`, `phone`, `country`, `city`, `address`, `googleMapsUrl`, `instagramUrl`, `facebookUrl`, `linkedinUrl`, `source`, `sourceReference`, `status`, `priority`, and `notes`. Header matching ignores case, spaces, hyphens, and underscores.
 
 ## Environment variables
 
@@ -126,6 +153,7 @@ cd server
 npm run prisma:validate
 npm run typecheck
 npm run build
+npm test
 
 cd ../client
 npm run typecheck
@@ -138,17 +166,19 @@ To verify migrations against a disposable local database, start Docker PostgreSQ
 
 Create a Railway PostgreSQL service plus separate services rooted at `server` and `client`.
 
-- Server build command: `npm ci && npm run prisma:generate && npm run build`
-- Server start command: `npm run prisma:deploy && npm start`
-- Client build command: `npm ci && npm run build`
+- Server build command: `npm run prisma:generate && npm run build`
+- Server pre-deploy command: `npm run prisma:deploy`
+- Server start command: `npm start`
+- Client build command: `npm run build`
 - Client start command: `npm run preview -- --host 0.0.0.0 --port $PORT`
 - Set `DATABASE_URL` from Railway PostgreSQL, a production `JWT_SECRET`, `CLIENT_URL` to the client domain, and `VITE_API_URL` to the server domain plus `/api`.
 
-## Phase 1 limitations
+## Current limitations
 
 - JWT access tokens are stored in browser local storage. A refresh-token or secure-cookie strategy is reserved for the later security phase; use short expirations and strict CSP/origin controls in production until then.
 - Password reset, MFA, profile editing, and additional roles are not part of Phase 1.
-- Navigation modules beyond Dashboard and Settings are clearly marked placeholders and have no fake actions.
+- Lead archive is intentionally one-way in Phase 2; restoring archived leads can be added with a future retention policy.
+- CSV import accepts up to 500 rows and 2 MB per file and does not attempt to infer missing business data.
+- Navigation modules beyond Dashboard, Leads, and Settings are clearly marked placeholders and have no fake actions.
 - The health endpoint intentionally reports failure when PostgreSQL is unreachable.
-- No lead or service-catalogue models are introduced because the instruction requires stopping after Phase 1.
-
+- No lead discovery, audit execution, outreach generation, or proposal logic is included because the instruction requires stopping after Phase 2.

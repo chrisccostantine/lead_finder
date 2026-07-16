@@ -1,4 +1,4 @@
-import { BarChart3, BriefcaseBusiness, FileSearch, FileText, MessageSquareText, Search } from 'lucide-react';
+import { BarChart3, FileSearch, FileText, MessageSquareText, Search } from 'lucide-react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { ProtectedRoute } from './auth/protected-route';
 import { AppShell } from './components/app-shell';
@@ -6,6 +6,10 @@ import { AuthPage } from './pages/auth-page';
 import { DashboardPage } from './pages/dashboard-page';
 import { PlaceholderPage } from './pages/placeholder-page';
 import { SettingsPage } from './pages/settings-page';
+import { LeadsPage } from './pages/leads-page';
+import { LeadEditorPage } from './pages/lead-editor-page';
+import { LeadDetailPage } from './pages/lead-detail-page';
+import { LeadImportPage } from './pages/lead-import-page';
 
 export default function App() {
   return <Routes>
@@ -15,7 +19,11 @@ export default function App() {
       <Route element={<AppShell />}>
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/lead-finder" element={<PlaceholderPage title="Lead Finder" description="Approved provider search and reviewed lead imports will be implemented in Phase 3." icon={Search} />} />
-        <Route path="/leads" element={<PlaceholderPage title="Leads" description="Lead management, filtering, and import workflows will be implemented in Phase 2." icon={BriefcaseBusiness} />} />
+        <Route path="/leads" element={<LeadsPage />} />
+        <Route path="/leads/new" element={<LeadEditorPage mode="create" />} />
+        <Route path="/leads/import" element={<LeadImportPage />} />
+        <Route path="/leads/:id" element={<LeadDetailPage />} />
+        <Route path="/leads/:id/edit" element={<LeadEditorPage mode="edit" />} />
         <Route path="/audits" element={<PlaceholderPage title="Audits" description="Website and social presence audits will be introduced in their dedicated phases." icon={FileSearch} />} />
         <Route path="/outreach" element={<PlaceholderPage title="Outreach" description="Personalized message generation and lightweight activity tracking are planned for later phases." icon={MessageSquareText} />} />
         <Route path="/proposals" element={<PlaceholderPage title="Proposals" description="Tailored, reviewable proposal generation will be implemented in Phase 9." icon={FileText} />} />
@@ -26,4 +34,3 @@ export default function App() {
     <Route path="*" element={<Navigate to="/dashboard" replace />} />
   </Routes>;
 }
-

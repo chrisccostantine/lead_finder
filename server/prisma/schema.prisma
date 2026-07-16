@@ -11,6 +11,27 @@ enum Role {
   ADMIN
 }
 
+enum LeadStatus {
+  NEW
+  REVIEWED
+  QUALIFIED
+  NOT_QUALIFIED
+  READY_FOR_OUTREACH
+  CONTACTED
+  REPLIED
+  MEETING_BOOKED
+  PROPOSAL_SENT
+  WON
+  LOST
+}
+
+enum LeadPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
 model User {
   id           String   @id @default(uuid()) @db.Uuid
   email        String   @unique @db.VarChar(254)
@@ -20,6 +41,81 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
+  leadStatusChanges LeadStatusHistory[]
+
   @@map("users")
 }
 
+model Lead {
+  id              String       @id @default(uuid()) @db.Uuid
+  businessName    String       @map("business_name") @db.VarChar(160)
+  industry        String?      @db.VarChar(120)
+  description     String?      @db.Text
+  websiteUrl      String?      @map("website_url") @db.VarChar(2048)
+  email           String?      @db.VarChar(254)
+  phone           String?      @db.VarChar(40)
+  country         String?      @db.VarChar(100)
+  city            String?      @db.VarChar(100)
+  address         String?      @db.VarChar(500)
+  googleMapsUrl   String?      @map("google_maps_url") @db.VarChar(2048)
+  instagramUrl    String?      @map("instagram_url") @db.VarChar(2048)
+  facebookUrl     String?      @map("facebook_url") @db.VarChar(2048)
+  linkedinUrl     String?      @map("linkedin_url") @db.VarChar(2048)
+  source          String?      @db.VarChar(100)
+  sourceReference String?      @map("source_reference") @db.VarChar(255)
+  status          LeadStatus   @default(NEW)
+  priority        LeadPriority @default(MEDIUM)
+  notes           String?      @db.Text
+  businessNameKey String       @map("business_name_key") @db.VarChar(160)
+  websiteKey      String?      @map("website_key") @db.VarChar(255)
+  emailKey        String?      @map("email_key") @db.VarChar(254)
+  phoneKey        String?      @map("phone_key") @db.VarChar(40)
+  archivedAt      DateTime?    @map("archived_at")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  contacts      LeadContact[]
+  statusHistory LeadStatusHistory[]
+
+  @@index([status, archivedAt])
+  @@index([priority, archivedAt])
+  @@index([businessNameKey])
+  @@index([websiteKey])
+  @@index([emailKey])
+  @@index([phoneKey])
+  @@index([createdAt])
+  @@map("leads")
+}
+
+model LeadContact {
+  id        String   @id @default(uuid()) @db.Uuid
+  leadId    String   @map("lead_id") @db.Uuid
+  name      String   @db.VarChar(120)
+  jobTitle  String?  @map("job_title") @db.VarChar(120)
+  email     String?  @db.VarChar(254)
+  phone     String?  @db.VarChar(40)
+  isPrimary Boolean  @default(false) @map("is_primary")
+  notes     String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@map("lead_contacts")
+}
+
+model LeadStatusHistory {
+  id        String     @id @default(uuid()) @db.Uuid
+  leadId    String     @map("lead_id") @db.Uuid
+  userId    String     @map("user_id") @db.Uuid
+  fromStatus LeadStatus? @map("from_status")
+  toStatus  LeadStatus @map("to_status")
+  createdAt DateTime   @default(now()) @map("created_at")
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([leadId, createdAt])
+  @@map("lead_status_history")
+}
