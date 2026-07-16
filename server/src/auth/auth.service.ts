@@ -20,7 +20,7 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(input.password, HASH_ROUNDS);
     const user = await prisma.$transaction(async (transaction) => {
       // Serialize initial setup attempts across backend instances.
-      await transaction.$executeRaw`SELECT pg_advisory_xact_lock(734641921)`;
+      await transaction.$queryRaw<Array<{ locked: string }>>`SELECT pg_advisory_xact_lock(734641921)::text AS locked`;
       if (await transaction.user.count()) throw new AppError(409, 'REGISTRATION_DISABLED', 'Initial registration has already been completed.');
       return transaction.user.create({ data: { email: input.email, name: input.name, passwordHash, role: 'ADMIN' } });
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
@@ -43,4 +43,3 @@ export class AuthService {
 }
 
 export const authService = new AuthService();
-
