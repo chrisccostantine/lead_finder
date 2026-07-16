@@ -1,4 +1,4 @@
-import { BarChart3, FileSearch, FileText, MessageSquareText } from 'lucide-react';
+import { BarChart3, FileText, MessageSquareText } from 'lucide-react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { ProtectedRoute } from './auth/protected-route';
 import { AppShell } from './components/app-shell';
@@ -11,6 +11,8 @@ import { LeadEditorPage } from './pages/lead-editor-page';
 import { LeadDetailPage } from './pages/lead-detail-page';
 import { LeadImportPage } from './pages/lead-import-page';
 import { LeadFinderPage } from './pages/lead-finder-page';
+import { AuditsPage } from './pages/audits-page';
+import { AuditDetailPage } from './pages/audit-detail-page';
 
 export default function App() {
   return <Routes>
@@ -25,7 +27,8 @@ export default function App() {
         <Route path="/leads/import" element={<LeadImportPage />} />
         <Route path="/leads/:id" element={<LeadDetailPage />} />
         <Route path="/leads/:id/edit" element={<LeadEditorPage mode="edit" />} />
-        <Route path="/audits" element={<PlaceholderPage title="Audits" description="Website and social presence audits will be introduced in their dedicated phases." icon={FileSearch} />} />
+        <Route path="/audits" element={<AuditsPage />} />
+        <Route path="/audits/:id" element={<AuditDetailPage />} />
         <Route path="/outreach" element={<PlaceholderPage title="Outreach" description="Personalized message generation and lightweight activity tracking are planned for later phases." icon={MessageSquareText} />} />
         <Route path="/proposals" element={<PlaceholderPage title="Proposals" description="Tailored, reviewable proposal generation will be implemented in Phase 9." icon={FileText} />} />
         <Route path="/analytics" element={<PlaceholderPage title="Analytics" description="Acquisition metrics will use real platform data after the underlying workflows are complete." icon={BarChart3} />} />

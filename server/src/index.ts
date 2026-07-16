@@ -1,9 +1,11 @@
 import { app } from './app.js';
 import { env } from './config/env.js';
 import { prisma } from './lib/prisma.js';
+import { auditService } from './audits/audit.service.js';
 
 const server = app.listen(env.PORT, () => {
   console.log(`Scalora Growth Engine API listening on port ${env.PORT}`);
+  void auditService.resumeIncomplete().catch((error) => console.error('Could not resume pending audits.', error));
 });
 
 async function shutdown(signal: string) {
@@ -16,4 +18,3 @@ async function shutdown(signal: string) {
 
 process.on('SIGINT', () => { void shutdown('SIGINT'); });
 process.on('SIGTERM', () => { void shutdown('SIGTERM'); });
-

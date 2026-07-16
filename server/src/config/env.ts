@@ -12,6 +12,10 @@ const envSchema = z.object({
   GOOGLE_PLACES_API_KEY: z.preprocess((value) => value || undefined, z.string().min(1).optional()),
   ENABLE_GOOGLE_PLACES: z.enum(['true', 'false']).default('false').transform((value) => value === 'true'),
   ENABLE_MOCK_PROVIDER: z.enum(['true', 'false']).default('true').transform((value) => value === 'true'),
+  GOOGLE_PAGESPEED_API_KEY: z.preprocess((value) => value || undefined, z.string().min(1).optional()),
+  ENABLE_PAGESPEED: z.enum(['true', 'false']).default('false').transform((value) => value === 'true'),
+  AUDIT_FETCH_TIMEOUT_MS: z.coerce.number().int().min(3000).max(30000).default(10000),
+  AUDIT_MAX_RESPONSE_BYTES: z.coerce.number().int().min(100000).max(5000000).default(1500000),
 });
 
 const parsed = envSchema.safeParse(process.env);

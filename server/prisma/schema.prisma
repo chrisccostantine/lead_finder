@@ -46,6 +46,13 @@ enum SearchJobStatus {
   FAILED
 }
 
+enum WebsiteAuditStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
 model User {
   id           String   @id @default(uuid()) @db.Uuid
   email        String   @unique @db.VarChar(254)
@@ -59,6 +66,7 @@ model User {
   searchJobs SearchJob[]
   apiUsageLogs ApiUsageLog[]
   savedSearchTemplates SavedSearchTemplate[]
+  websiteAudits WebsiteAudit[]
 
   @@map("users")
 }
@@ -140,6 +148,7 @@ model Lead {
 
   contacts      LeadContact[]
   statusHistory LeadStatusHistory[]
+  websiteAudits WebsiteAudit[]
 
   @@index([status, archivedAt])
   @@index([priority, archivedAt])
@@ -149,6 +158,36 @@ model Lead {
   @@index([phoneKey])
   @@index([createdAt])
   @@map("leads")
+}
+
+model WebsiteAudit {
+  id                 String             @id @default(uuid()) @db.Uuid
+  leadId             String             @map("lead_id") @db.Uuid
+  requestedById      String             @map("requested_by_id") @db.Uuid
+  url                String             @db.VarChar(2048)
+  status             WebsiteAuditStatus @default(PENDING)
+  overallScore       Int?               @map("overall_score")
+  technicalScore     Int?               @map("technical_score")
+  performanceScore   Int?               @map("performance_score")
+  seoScore           Int?               @map("seo_score")
+  conversionScore    Int?               @map("conversion_score")
+  mobileScore        Int?               @map("mobile_score")
+  strengths          Json               @default("[]")
+  problems           Json               @default("[]")
+  recommendedActions Json               @default("[]") @map("recommended_actions")
+  rawMetrics         Json               @default("{}") @map("raw_metrics")
+  failureReason      String?            @map("failure_reason") @db.Text
+  startedAt          DateTime?           @map("started_at")
+  completedAt        DateTime?           @map("completed_at")
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @updatedAt @map("updated_at")
+
+  lead        Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  requestedBy User @relation(fields: [requestedById], references: [id], onDelete: Restrict)
+
+  @@index([leadId, createdAt])
+  @@index([status, createdAt])
+  @@map("website_audits")
 }
 
 model LeadContact {

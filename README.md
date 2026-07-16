@@ -1,6 +1,6 @@
 # Scalora Growth Engine
 
-Internal, dark-first acquisition workspace for Scalora. This repository currently contains **Phases 1–3**: the authenticated foundation, lead management, and approved-source Lead Finder. Audits, outreach, proposals, and analytics remain intentionally unimplemented.
+Internal, dark-first acquisition workspace for Scalora. This repository currently contains **Phases 1–4**: the authenticated foundation, lead management, approved-source Lead Finder, and website audit engine. Social audits, outreach, proposals, and analytics remain intentionally unimplemented.
 
 ## Included
 
@@ -22,6 +22,12 @@ Internal, dark-first acquisition workspace for Scalora. This repository currentl
 - Adapter-based Lead Finder with mock, manual CSV, and official Google Places providers
 - Persisted search jobs, reviewed result imports, existing-lead indicators, search history, and saved templates
 - Provider feature flags, graceful Google configuration handling, API usage logs, and explicit cost/data warnings
+- Persistent website-audit background jobs with progress, history, re-runs, and restart recovery
+- DNS-aware SSRF protection, redirect revalidation, strict fetch timeouts, response-size limits, and HTTP(S)-only URLs
+- Technical, performance, SEO, conversion, and mobile analysis with deterministic category and overall scores
+- Optional server-side Google PageSpeed Insights integration with graceful local-check fallback
+- Severity-grouped findings, strengths, recommended actions, raw metrics, and comparison with the previous audit
+- Unit tests for audit scoring and private-network address blocking
 
 ## Repository structure
 
@@ -106,6 +112,10 @@ Internal, dark-first acquisition workspace for Scalora. This repository currentl
 | GET/POST | `/api/lead-finder/templates` | Bearer token | List or save search templates |
 | DELETE | `/api/lead-finder/templates/:id` | Bearer token | Delete a search template |
 | GET | `/api/lead-finder/usage` | Bearer token | Provider request/result totals |
+| GET | `/api/audits` | Bearer token | Paginated audit history, optionally filtered by lead or status |
+| POST | `/api/audits/leads/:leadId` | Bearer token | Queue a website audit for a lead |
+| GET | `/api/audits/:id` | Bearer token | Audit progress, scores, issues, recommendations, and metrics |
+| POST | `/api/audits/:id/rerun` | Bearer token | Queue a new audit using the lead's current website URL |
 
 Example login body:
 
@@ -126,6 +136,8 @@ API errors use a consistent shape:
 `Lead` contains the requested business, location, website, social, source, status, priority, and notes fields. It also stores normalized internal matching keys and `archivedAt` for soft deletion. `LeadContact` stores manually entered business contacts. `LeadStatusHistory` records each initial and subsequent status with the responsible user. Phase 2 adds indexed filters and lookup keys without introducing later-phase audit or outreach relationships.
 
 `SearchJob` stores provider criteria, status, result snapshots, import counts, duplicate counts, errors, and timing. `ApiUsageLog` records provider requests and returned result counts. `SavedSearchTemplate` stores reusable, user-owned search criteria. Google API keys never enter these records or frontend responses.
+
+`WebsiteAudit` stores the requested URL, background-job status and timing, category scores, overall score, strengths, severity-tagged problems, recommended actions, raw metrics, and a safe failure reason. It belongs to a lead and records the admin who requested it. Completed audits are immutable history records so later runs can be compared without overwriting evidence.
 
 ## Lead list filters
 
@@ -153,6 +165,10 @@ The client reads the selected CSV locally and sends its text to the authenticate
 | `GOOGLE_PLACES_API_KEY` | No | Server-only Places API (New) credential |
 | `ENABLE_GOOGLE_PLACES` | No | Enables Google provider when set to `true` and a key exists |
 | `ENABLE_MOCK_PROVIDER` | No | Enables synthetic development results; defaults to `true` |
+| `GOOGLE_PAGESPEED_API_KEY` | No | Server-only PageSpeed Insights credential |
+| `ENABLE_PAGESPEED` | No | Enables PageSpeed mobile/Lighthouse metrics when a key is present |
+| `AUDIT_FETCH_TIMEOUT_MS` | No | Per-request website timeout; defaults to `10000`, maximum `30000` |
+| `AUDIT_MAX_RESPONSE_BYTES` | No | Maximum audited response body; defaults to `1500000` |
 
 ### Client
 
@@ -198,6 +214,10 @@ Create a Railway PostgreSQL service plus separate services rooted at `server` an
 - Google Places does not provide email addresses; the interface labels this limitation and never invents them.
 - Radius bias for Google requires a user-provided latitude/longitude search center. Automatic geocoding is not part of Phase 3.
 - API costs are not estimated because billing varies; actual request/result counts and cost warnings are shown.
-- Navigation modules beyond Dashboard, Lead Finder, Leads, and Settings are clearly marked placeholders and have no fake actions.
+- Website checks analyze the public homepage and conventional `robots.txt`, `sitemap.xml`, and favicon locations. HTML heuristics can require human confirmation and are presented as findings, not guarantees.
+- PageSpeed is optional. Without it, performance uses bounded response-time and HTML-size signals; accessibility, best-practices, and web-vital metrics remain unavailable.
+- Background jobs run inside the API process as required for Phase 4. Interrupted pending/running jobs resume on startup, but a dedicated queue is recommended before horizontal scaling.
+- Websites that reject automated requests, present invalid TLS certificates, exceed safety limits, or are unreachable are saved as failed audits with a reviewable reason.
+- Navigation modules beyond Dashboard, Lead Finder, Leads, Audits, and Settings are clearly marked placeholders and have no fake actions.
 - The health endpoint intentionally reports failure when PostgreSQL is unreachable.
-- No unauthorized scraping, audit execution, outreach generation, or proposal logic is included because the instruction requires stopping after Phase 3.
+- No unauthorized scraping, social audit, outreach generation, or proposal logic is included because the instruction requires stopping after Phase 4.

@@ -9,6 +9,7 @@ import { errorHandler, notFoundHandler } from './middleware/error-handler.js';
 import { healthRouter } from './routes/health.routes.js';
 import { leadRouter } from './leads/lead.routes.js';
 import { leadFinderRouter } from './lead-finder/lead-finder.routes.js';
+import { auditRouter } from './audits/audit.routes.js';
 
 export const app = express();
 
@@ -24,5 +25,6 @@ app.use('/api/health', healthRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/leads', leadRouter);
 app.use('/api/lead-finder', leadFinderRouter);
+app.use('/api/audits', auditRouter);
 app.use(notFoundHandler);
 app.use(errorHandler);
